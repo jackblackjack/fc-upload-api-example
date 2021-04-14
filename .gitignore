@@ -1,0 +1,9 @@
+node_modules
+*.code-workspace
+.editorconfig
+package-lock.json
+.vagrant
+logs/*.log*
+provision/roles
+public/uploads/*
+dist

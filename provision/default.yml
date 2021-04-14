@@ -1,0 +1,32 @@
+# encoding: utf-8
+
+#
+# VM Settings
+name: fc-upload-api-example
+linked_clone: false # Linked Clone for Vagrant v1.8
+memory: 1536
+cpus: 2
+#cpu_execution_cap: 100
+disksize: 2G
+
+#
+# Host box settings.
+boot_timeout: 1200
+dist_box: "bento/ubuntu-18.04"
+dist_box_version: "202012.21.0"
+dist_box_update: false
+
+#
+# Network Settings
+hostname: fc-upload-api.example
+ip: 192.168.33.83
+
+#
+# Forwarded ports (host -> guest).
+#forwarded_ports:
+#  - 8080: 3000
+
+#
+# Synced folder.
+synced_folder: ./
+document_root: /var/opt/app
