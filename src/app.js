@@ -60,7 +60,7 @@ try {
   })
 
   // Init upload limit size.
-  const upload_limit_size = (-1 !== Object.keys(process.env).indexOf('UPLOAD_LIMIT_BYTES') ? process.env.UPLOAD_LIMIT_BYTES : 5242880)
+  const upload_limit_size = (-1 !== Object.keys(process.env).indexOf('UPLOAD_LIMIT_BYTES') ? process.env.UPLOAD_LIMIT_BYTES : 0)
 
   // Init container id.
   const upload_container_id = (-1 !== Object.keys(process.env).indexOf('UPLOAD_CONTAINER_ID') ? process.env.UPLOAD_CONTAINER_ID : 'myFile')
@@ -68,7 +68,10 @@ try {
   // Init Upload
   const multer_upload = Multer({
     storage: storage,
-    limits:{ fileSize: upload_limit_size },
+    limits: {
+      fieldSize: upload_limit_size,
+      fileSize: upload_limit_size
+    },
     fileFilter: function(req, file, cb) {
       // Set allowed extensions.
       const filetypes = /jpeg|jpg|png|xlsx/
@@ -79,10 +82,17 @@ try {
       // Check mime
       const mimetype = filetypes.test(file.mimetype)
 
-      if(mimetype && extname) {
-        return cb(null, true)
+      if (mimetype && extname) {
+        // Checking size of data.
+        const file_size = +req.rawHeaders.slice(-1)[0]
+        if (file_size > upload_limit_size) {
+          cb(`Upload file is limited to ${upload_limit_size} bytes in size`)
+        }
+        else {
+          return cb(null, true)
+        }
       } else {
-        cb('Error: jpeg, jpg, png, xlsx')
+        cb('Only jpeg, jpg, png, xlsx file types allowed')
       }
     }
   }).single(upload_container_id)
@@ -157,40 +167,45 @@ try {
   app.put('/', (req, res) => {
     try {
       multer_upload(req, res, (err) => {
-        if (err) {
-          res.json({ status: 'error', message: `${err}` })
-        }
-        else {
-          if (req.file == undefined) {
-            res.json({ status: 'error', message: 'Cannot recognize data' })
+        try {
+          if (err) {
+            throw err
           }
           else {
-            // Init thing.
-            const thing = new Thing()
-
-            // Build thing.
-            const file_attrs = Object.keys(req.file)
-            for (let i in file_attrs) {
-              thing.attrs.push({[file_attrs[i]]: req.file[file_attrs[i]]})
+            if (req.file == undefined) {
+              throw new Error(`File data is not found`)
             }
+            else {
+              // Init thing.
+              const thing = new Thing()
 
-            // Save thing.
-            thing.save(function (err, file) {
-              if (err) {
-                res.json({ status: 'error', message: `Error while save: ${err}` })
+              // Build thing.
+              const file_attrs = Object.keys(req.file)
+              for (let i in file_attrs) {
+                thing.attrs.push({[file_attrs[i]]: req.file[file_attrs[i]]})
               }
-              else {
-                // Entry log about file action.
-                logger.info(`File with ID #${file.id} successfully created on worker id #${app.locals.worker_id}`)
-              }
-            })
+
+              // Save thing.
+              thing.save(function (err, file) {
+                if (err) {
+                  throw new Error(`Error while save: ${err}`)
+                }
+                else {
+                  // Entry log about file action.
+                  logger.info(`File with ID #${file.id} successfully created on worker id #${app.locals.worker_id}`)
+                }
+              })
+            }
           }
+          res.redirect('/')
         }
-        res.redirect('/')
+        catch(error) {
+          res.json({ status: 'error', message: `An error occured while upload: ${error}` })
+        }
       })
     }
     catch(error) {
-      res.json({ status: 'error', message: `${err}` })
+      res.json({ status: 'error', message: `${error}` })
     }
   })
 
