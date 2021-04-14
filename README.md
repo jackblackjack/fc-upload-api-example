@@ -1,4 +1,4 @@
-# File Uploads Example
+# File Uploads Example API
 ### Установка
 ```sh
 $ npm install
