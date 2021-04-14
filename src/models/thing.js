@@ -13,6 +13,6 @@ const ThingSchema = new Schema({
     default: false
   },
   attrs: [Schema.Types.Mixed],
-}, { strict: false, timestamps: { createdAt: true, updatedAt: false }, versionKey: 'version' })
+}, { strict: false, timestamps: { createdAt: true, updatedAt: false }, versionKey: false })
 
 module.exports = Mongoose.model('Thing', ThingSchema)
